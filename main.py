@@ -125,10 +125,12 @@ class Tetris:
         self.stone.x = int(COLS / 2 - len(self.stone.shape[0]) / 2)
         self.stone.y = 0
         self.next_stone = Stone(shapes[rand(len(shapes))])
-        print(self.get_height())
 
         if self.stone.check_collision(self.board.shape):
             self.gameover = True
+
+        if self.ai:
+            self.ai()
 
     def disp_msg(self, msg, pos):
         x, y = pos
@@ -271,7 +273,7 @@ class Tetris:
             self.hold = Stone([[0], [0]])
             self.run()
 
-    def get_height(self):
+    def height_sum(self):
         height = 0
         for x in range(COLS + 1):
             for y in range(ROWS):
@@ -280,14 +282,14 @@ class Tetris:
                     break
         return height
 
-    def get_completed_lines(self):
+    def completed_lines(self):
         line = 0
         for row in self.board.shape[:-1]:
             if 0 not in row:
                 line += 1
         return line
 
-    def get_bumpiness(self):
+    def bumpiness(self):
         bumpiness = 0
         last_col = 0
         for x in range(COLS + 1):
@@ -299,6 +301,23 @@ class Tetris:
                     last_col = ROWS - y
                     break
         return bumpiness
+
+    def hole(self):
+        hole = 0
+        for x in range(COLS + 1):
+            for y in range(1, ROWS):
+                if not self.board.shape[y][x] and self.board.shape[y - 1][x]:
+                    hole += 1
+                    break
+        return hole
+
+    def ai(self):
+        a = -0.510066
+        b = 0.760666
+        c = -0.35663
+        d = -0.184483
+        score = a * self.height_sum() + b * self.completed_lines() + c * self.hole() + d * self.bumpiness()
+        print(score)
 
     def run(self):
         while 1:
@@ -337,3 +356,4 @@ class Tetris:
 if __name__ == '__main__':
     App = Tetris()
     App.start_game()
+    App.ai()
