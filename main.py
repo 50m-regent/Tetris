@@ -80,19 +80,19 @@ class Stone:
 class Board:
     def __init__(self):
         self.shape = [[1] + [0 for x in range(COLS)] for y in range(ROWS)]
-        self.shape += [[1 for x in range(COLS + 2)]]
+        self.shape += [[2 for x in range(COLS + 1)]]
         self.x = -1
         self.y = 0
 
     def remove_row(self, row):
         del self.shape[row]
-        self.shape = [[0 for i in range(COLS)]] + self.shape
+        self.shape = [[1] + [0 for x in range(COLS)]] + self.shape
 
     def join_stone(self, stone):
         for cy, row in enumerate(stone.shape):
             for cx, val in enumerate(row):
                 if val:
-                    self.shape[cy + stone.y - 1][cx + stone.x + 1] = val
+                    self.shape[cy + stone.y - 1][cx + stone.x + 1] += val
 
 
 class Tetris:
@@ -125,6 +125,7 @@ class Tetris:
         self.stone.x = int(COLS / 2 - len(self.stone.shape[0]) / 2)
         self.stone.y = 0
         self.next_stone = Stone(shapes[rand(len(shapes))])
+        print(self.get_height())
 
         if self.stone.check_collision(self.board.shape):
             self.gameover = True
@@ -245,7 +246,6 @@ class Tetris:
         predicted_stone.y -= 1
         self.draw(predicted_stone, True)
 
-
     def toggle_pause(self):
         self.paused = not self.paused
 
@@ -270,6 +270,35 @@ class Tetris:
             self.new_stone()
             self.hold = Stone([[0], [0]])
             self.run()
+
+    def get_height(self):
+        height = 0
+        for x in range(COLS + 1):
+            for y in range(ROWS):
+                if self.board.shape[y][x] >= 2:
+                    height += ROWS - y
+                    break
+        return height
+
+    def get_completed_lines(self):
+        line = 0
+        for row in self.board.shape[:-1]:
+            if 0 not in row:
+                line += 1
+        return line
+
+    def get_bumpiness(self):
+        bumpiness = 0
+        last_col = 0
+        for x in range(COLS + 1):
+            for y in range(ROWS + 1):
+                if self.board.shape[y][x] >= 2:
+                    if not last_col:
+                        last_col = ROWS - y
+                    bumpiness += abs(ROWS - y - last_col)
+                    last_col = ROWS - y
+                    break
+        return bumpiness
 
     def run(self):
         while 1:
